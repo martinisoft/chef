@@ -548,36 +548,22 @@ EOF
 
     it "should enable the service if it is not enabled" do
       allow(current_resource).to receive(:enabled).and_return(false)
-      expect(provider).to receive(:read_rc_conf).and_return([ "foo", "#{new_resource.service_name}_enable=\"NO\"", "bar" ])
-      expect(provider).to receive(:write_rc_conf).with(["foo", "bar", "#{new_resource.service_name}_enable=\"YES\""])
-      provider.enable_service()
-    end
-
-    it "should not partial match an already enabled service" do
-      allow(current_resource).to receive(:enabled).and_return(false)
-      expect(provider).to receive(:read_rc_conf).and_return([ "foo", "thing_#{new_resource.service_name}_enable=\"NO\"", "bar" ])
-      expect(provider).to receive(:write_rc_conf).with(["foo", "thing_#{new_resource.service_name}_enable=\"NO\"", "bar", "#{new_resource.service_name}_enable=\"YES\""])
-      provider.enable_service()
+      sysrc_command = instance_double("Mixlib::ShellOut", stdout: "foo_enable: NO -> YES")
+      allow(provider).to receive(:shell_out!).and_return(sysrc_command)
+      provider.enable_service
     end
 
     it "should enable the service if it is not enabled and not already specified in the rc.conf file" do
       allow(current_resource).to receive(:enabled).and_return(false)
-      expect(provider).to receive(:read_rc_conf).and_return(%w{foo bar})
-      expect(provider).to receive(:write_rc_conf).with(["foo", "bar", "#{new_resource.service_name}_enable=\"YES\""])
-      provider.enable_service()
+      sysrc_command = instance_double("Mixlib::ShellOut", stdout: "foo_enable: NO -> YES")
+      allow(provider).to receive(:shell_out!).and_return(sysrc_command)
+      provider.enable_service
     end
 
     it "should not enable the service if it is already enabled" do
       allow(current_resource).to receive(:enabled).and_return(true)
       expect(provider).not_to receive(:write_rc_conf)
       provider.enable_service
-    end
-
-    it "should remove commented out versions of it being enabled" do
-      allow(current_resource).to receive(:enabled).and_return(false)
-      expect(provider).to receive(:read_rc_conf).and_return([ "foo", "bar", "\# #{new_resource.service_name}_enable=\"YES\"", "\# #{new_resource.service_name}_enable=\"NO\""])
-      expect(provider).to receive(:write_rc_conf).with(["foo", "bar", "#{new_resource.service_name}_enable=\"YES\""])
-      provider.enable_service()
     end
   end
 
@@ -589,15 +575,8 @@ EOF
 
     it "should disable the service if it is not disabled" do
       allow(current_resource).to receive(:enabled).and_return(true)
-      expect(provider).to receive(:read_rc_conf).and_return([ "foo", "#{new_resource.service_name}_enable=\"YES\"", "bar" ])
-      expect(provider).to receive(:write_rc_conf).with(["foo", "bar", "#{new_resource.service_name}_enable=\"NO\""])
-      provider.disable_service()
-    end
-
-    it "should not disable an enabled service that partially matches" do
-      allow(current_resource).to receive(:enabled).and_return(true)
-      expect(provider).to receive(:read_rc_conf).and_return([ "foo", "thing_#{new_resource.service_name}_enable=\"YES\"", "bar" ])
-      expect(provider).to receive(:write_rc_conf).with(["foo", "thing_#{new_resource.service_name}_enable=\"YES\"", "bar", "#{new_resource.service_name}_enable=\"NO\""])
+      sysrc_command = instance_double("Mixlib::ShellOut", stdout: "foo_enable: NO -> YES")
+      allow(provider).to receive(:shell_out!).and_return(sysrc_command)
       provider.disable_service()
     end
 
@@ -609,8 +588,8 @@ EOF
 
     it "should remove commented out versions of it being disabled or enabled" do
       allow(current_resource).to receive(:enabled).and_return(true)
-      expect(provider).to receive(:read_rc_conf).and_return([ "foo", "bar", "\# #{new_resource.service_name}_enable=\"YES\"", "\# #{new_resource.service_name}_enable=\"NO\""])
-      expect(provider).to receive(:write_rc_conf).with(["foo", "bar", "#{new_resource.service_name}_enable=\"NO\""])
+      sysrc_command = instance_double("Mixlib::ShellOut", stdout: "foo_enable: NO -> YES")
+      allow(provider).to receive(:shell_out!).and_return(sysrc_command)
       provider.disable_service()
     end
   end

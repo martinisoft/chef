@@ -177,12 +177,7 @@ class Chef
         end
 
         def set_service_enable(value)
-          lines = read_rc_conf
-          # Remove line that set the old value
-          lines.delete_if { |line| line =~ /^\#?\s*#{Regexp.escape(service_enable_variable_name)}=/ }
-          # And append the line that sets the new value at the end
-          lines << "#{service_enable_variable_name}=\"#{value}\""
-          write_rc_conf(lines)
+          shell_out!("sysrc #{service_enable_variable_name}=\"#{value}\"")
         end
 
         def enabled_state_found!
